@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+        <title>
+            Eartquake datavis
+        </title>
+     <script src="d3/d3.minv4.js"></script>
+        <style type="text/css"></style>
+    </meta>
+</head>
+<body>
+     <script type="text/javascript">
+
+//////////defining the size of svg /////////////////
+var w = 800; //width of svg
+var h = 500; //height of svg
+var svgpadding = 10; //size of margins on all sides
+
+var margin = {top: svgpadding, right: svgpadding, bottom: svgpadding, left: svgpadding};
+var width = w - margin.left - margin.right;
+var height = h - margin.top - margin.bottom;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)  
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+////adding svg background
+svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr('x', -margin.left)
+    .attr('y', -margin.top)
+    .attr("fill", "#333" );  ///background color
+
+
+
+////////////////////Reading the datafile///////////
+var data; 
+
+//////d3.csv or d3.tsv or d3.json depending on the file type
+d3.tsv("data/signif.tsv", function(error, loadeddata) {
+    if (error) throw error;
+
+         data = loadeddata
+               .filter(function(d){ 
+                        return d.EQ_PRIMARY > 8
+                        && d.FOCAL_DEPTH != "" 
+                        && d.YEAR >= 1800 
+                        && d.TOTAL_DEATHS != ""
+
+                 }) 
+                
+                .map(function(d){
+
+                      return {  
+                            
+                             "country" : d.COUNTRY,
+
+                             "focal" : +d.FOCAL_DEPTH,
+
+                             "magn" : +d.EQ_PRIMARY,
+                             "magnPow" : Math.pow(10, +d.EQ_PRIMARY),                            
+
+                             "deaths" : +d.TOTAL_DEATHS,
+                             "deathCat" : +d.TOTAL_DEATHS_DESCRIPTION,  
+
+                              "year" : +d.YEAR,
+                              "tsu" : d.FLAG_TSUNAMI, 
+
+                             }
+                 });
+                
+                
+
+//drawChart();  
+
+       });
+
+//////////////////////////drawing svg elements///////////
+drawChart = function(){
+
+svg.selectAll("rect")
+    .data(data) 
+    .enter()  
+    .append("rect")
+    .attr("x", function(d) { 
+        console.log(d.year+" "+d.magn);
+        return d.year; })
+    .attr("y", 0 )
+    .attr("height", function(d) {return d.magn; })
+    .attr("width", 1)
+    .attr("fill", "white")
+     ;
+
+
+}
+
+    </script>
+</body>

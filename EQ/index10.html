@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+        <title>
+            Eartquake datavis
+        </title>
+     <script src="d3/d3.minv4.js"></script>
+        <style type="text/css">
+           .axis text {  fill: white; }  
+           .axis path{  stroke: white;  opacity: 0.4; }
+           .axis line{  stroke: white;   opacity: 0.4;  }  
+
+            button {
+            background-color: #333;
+            border: none;
+            color: white;
+            width: auto;
+            text-align: center;
+            display: inline-block;
+            font-size: 12px;
+            padding: 5px 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+          button:hover{
+          background-color: #1ED4E0;
+
+            }
+
+        </style>
+    </meta>
+</head>
+<body>
+<p>
+
+ <button onclick="filter('JAPAN', 'country');">Japan</button>
+ <button onclick="filter('IRAN', 'country');">Iran</button>
+ <button onclick="filter('USA', 'country');">USA</button>
+ <button onclick="filter('TURKEY', 'country');">Turkey</button>
+ <button onclick="filter('HAITI', 'country');">Haiti</button>
+ <button onclick="filter('NEPAL', 'country');">Nepal</button>
+ <button onclick="filter('CHILE', 'country');">Chile</button>
+ <button onclick="filter('INDIA', 'country');">India</button>
+<button onclick="filter('CHINA', 'country');">China</button>
+
+<button onclick="filterIfMore(9, 'magn');">over 9</button>
+
+</p>
+
+     <script type="text/javascript">
+
+//////////defining the size of svg /////////////////
+var w = 600; //width of svg
+var h = 500; //height of svg
+var svgpadding = 40; //size of margins on all sides
+
+var margin = {top: svgpadding, right: svgpadding, bottom: svgpadding, left: svgpadding};
+var width = w - margin.left - margin.right;
+var height = h - margin.top - margin.bottom;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)  
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+////adding svg background
+svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr('x', -margin.left)
+    .attr('y', -margin.top)
+    .attr("fill", "#333" );  ///background color
+
+
+
+////////////////////Reading the datafile///////////
+var data; 
+
+//////d3.csv or d3.tsv or d3.json depending on the file type
+d3.tsv("data/signif.tsv", function(error, loadeddata) {
+    if (error) throw error;
+
+         data = loadeddata
+               .filter(function(d){ 
+                        return d.EQ_PRIMARY > 1
+                        && d.FOCAL_DEPTH != "" 
+                        && d.YEAR >= 1800 
+                        && d.TOTAL_DEATHS != ""
+                        && d.FOCAL_DEPTH < 160 
+
+                 }) 
+                
+                .map(function(d){
+
+                      return {  
+                            
+                             "country" : d.COUNTRY,
+
+                             "focal" : +d.FOCAL_DEPTH,
+
+                             "magn" : +d.EQ_PRIMARY,
+                             "magnPow" : Math.pow(10, +d.EQ_PRIMARY),                            
+
+                             "deaths" : +d.TOTAL_DEATHS,
+                             "deathArea" : Math.sqrt(d.TOTAL_DEATHS/Math.PI),
+                             "deathCat" : +d.TOTAL_DEATHS_DESCRIPTION,  
+
+                              "year" : +d.YEAR,
+                              "tsu" : d.FLAG_TSUNAMI, 
+
+                             }
+                 });
+                
+                
+//console.log(data);
+
+scales();
+drawChart();
+
+       });
+
+//////////////////////////drawing svg elements///////////
+drawChart = function(){
+
+
+///define a group for each eartquake that will contain all elements
+var earthq = svg.selectAll(".earthq")
+    .data(data)
+    .enter()
+    .append("g") ///add the group (g = group)
+    .attr('class','earthq')
+    .attr('transform', function(d) { return 'translate(' + xScale(d.year) + ',' + 0 + ')';   }); //position elements on x sclae to correspont the year
+
+
+//add triangle
+earthq.append("polygon")
+      //////Magnitude is the width of the triangle, focus is the height
+      .attr("points", function(d) { return -scaleMagnPow(d.magnPow)/2 + ", 0, "+ scaleMagnPow(d.magnPow)/2 + ", 0, 0, " + scaleFocal(d.focal); })
+      .attr("fill", function(d) { return (d.tsu == "Tsu") ? "#27D1D7" : "white"; })
+      .attr('opacity', function(d) { return (d.magn >= 8.5) ? 0.8 : 0.2; })
+     
+     ;
+
+
+//add circles
+earthq.append("circle")
+       .attr("cx", 0)
+       .attr("cy", function (d) { return scaleFocal(d.focal); })
+       .attr("r", function (d) { return scaleDeath(d.deathArea); })
+       .attr("fill", "none")
+       .attr("stroke", "LightCoral")
+       .attr('opacity',0.8)
+     ;
+
+}
+
+//////////////FILTER and ANIMATION
+
+filter = function(val, varname){
+removeAll();
+
+
+///////////filter based on condition///////
+filteredElements =  svg.selectAll(".earthq")
+         .transition()
+         .duration(1000)
+         .delay(function(d,i){  return 500+(i/data.length)*500;})
+         .ease(d3.easePolyOut.exponent(5))
+         .filter(function(d) {  return d[varname] == val; })  
+         ;
+
+drawFilteredElements();
+}
+
+filterIfMore = function(val, varname){
+removeAll();
+
+filteredElements =  svg.selectAll(".earthq")
+         .transition()
+         .duration(1000)
+         .delay(function(d,i){  return 500+(i/data.length)*500;})
+         .ease(d3.easePolyOut.exponent(5))
+         //////////filter if the number is higher than provided value
+         .filter()
+         ;
+
+drawFilteredElements();
+}
+
+
+
+
+//////hide elements//////
+removeAll = function(){
+ svg.selectAll(".earthq").selectAll("polygon") 
+    .transition().duration(500)
+    .attr("points", function(d) { return (-scaleMagnPow(d.magnPow)/2 + ", 0, "+ scaleMagnPow(d.magnPow)/2 + ", 0, 0, " + 0);
+});
+
+ svg.selectAll(".earthq").selectAll("circle")
+    .transition().duration(500)
+    .attr("r", 0);
+}
+
+
+/////////draw only filtered elements 
+var filteredElements;
+
+drawFilteredElements = function(){
+         filteredElements.selectAll("polygon")
+                         .attr("points", function(d) { return (-scaleMagnPow(d.magnPow)/2 + ", 0, "+ scaleMagnPow(d.magnPow)/2 + ", 0, 0, " + scaleFocal(d.focal));
+                          });
+
+          filteredElements.selectAll("circle")
+                        .delay(1000)
+                         .attr("r", function (d) { return scaleDeath(d.deathArea); })
+
+   
+};
+
+
+
+
+
+ //////////////scaling////////////////
+var xScale;
+var scaleFocal;
+var scaleMagn;
+var scaleMagnPow;
+var scaleDeath;
+
+scales = function(){
+
+var minYear = d3.min(data, function(d) { return d.year;  });
+var maxYear = d3.max(data, function(d) { return d.year;  });
+
+var maxMagn = d3.max(data, function(d) { return d.magn;  });
+var maxMagnPow = d3.max(data, function(d) { return d.magnPow;  });
+var maxFocal = d3.max(data, function(d) { return d.focal;  });
+var maxDeath = d3.max(data, function(d) { return d.deathArea;  });
+
+xScale = d3.scaleLinear()
+           .domain([minYear, maxYear])
+           .range([0, width])
+           .nice()
+           ;
+
+scaleFocal = d3.scaleLinear()
+           .domain([0, maxFocal])
+           .range([0, height])
+           .nice()
+           ;
+
+scaleMagn = d3.scaleLinear()
+           .domain([0, maxMagn])
+           .range([0, width/6])
+           .nice()
+           ;
+
+scaleMagnPow = d3.scaleLinear()
+           .domain([0, maxMagnPow])
+           .range([1, width/6]) 
+           .nice()
+           ;
+
+scaleDeath = d3.scaleLinear()
+                .domain([0, maxDeath])
+                .range([0, 30])
+                 .nice()
+                 ;
+
+
+/////////define axes 
+var xAxis = d3.axisTop()
+            .scale(xScale) //add scale
+            .ticks(5)
+            .tickFormat(d3.format('.0f'))
+            ;
+
+var yAxis = d3.axisLeft()
+            .scale(scaleFocal) //add scale
+            ;
+
+///// adding axes to svg
+svg.append('g').call(xAxis).attr("class", "axis");
+svg.append('g').call(yAxis).attr("class", "axis");
+
+}
+
+    </script>
+</body>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+        <title>
+           SVG background
+        </title>
+     <script src="d3/d3.minv4.js"></script>
+        <style type="text/css"></style>
+    </meta>
+</head>
+<body>
+     <script type="text/javascript">
+
+//////////defining the size of svg /////////////////
+var w = 800; //width of svg
+var h = 500; //height of svg
+var svgpadding = 10; //size of margins on all sides
+
+var margin = {top: svgpadding, right: svgpadding, bottom: svgpadding, left: svgpadding};
+var width = w - margin.left - margin.right;
+var height = h - margin.top - margin.bottom;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)  
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+////adding svg background
+svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr('x', -margin.left)
+    .attr('y', -margin.top)
+    .attr("fill", "black" );  ///background color
+    
+    </script>
+</body>

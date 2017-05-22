@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+        <title>
+            Eartquake datavis
+        </title>
+     <script src="d3/d3.minv4.js"></script>
+        <style type="text/css"></style>
+    </meta>
+</head>
+<body>
+     <script type="text/javascript">
+
+//////////defining the size of svg /////////////////
+var w = 800; //width of svg
+var h = 500; //height of svg
+var svgpadding = 10; //size of margins on all sides
+
+var margin = {top: svgpadding, right: svgpadding, bottom: svgpadding, left: svgpadding};
+var width = w - margin.left - margin.right;
+var height = h - margin.top - margin.bottom;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)  
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+////adding svg background
+svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr('x', -margin.left)
+    .attr('y', -margin.top)
+    .attr("fill", "#333" );  ///background color
+
+
+/////add shapes
+svg.append("rect")
+    .attr('x', 0)
+    .attr('y', height-300)
+    .attr('width', 100)
+    .attr('height', 300)
+    .attr('fill', 'red' )
+    .attr('stroke', 'white')
+    .attr('stroke-width', 2)
+    .attr('opacity', 0.5)
+    ;
+
+console.log(widthdd)
+
+svg.append("circle")
+    .attr('cx', 100)
+    .attr('cy', 100)
+    .attr('r', 50)
+    .attr('fill', 'pink' )
+    .attr('opacity', 0.5)
+    ;
+
+svg.append("line")
+    .attr('x1', 10)
+    .attr('y1', 400)
+    .attr('x2', width)
+    .attr('y2', 400)
+    .attr('stroke', 'white')
+    .attr('stroke-width', 2)
+    ;
+
+svg.append("text")
+    .text('This is a text')
+    .attr('x', 500)
+    .attr('y', 395)
+    .attr('font-family', 'monospace')
+    .attr('font-size', '10px')
+    .attr('fill', 'yellow')
+    .attr('text-anchor', 'end')
+    ;
+
+svg.append("polygon")
+    .attr("points", '200, 0, 400,0, 300, 450')   //x1, y1, x2, y2, x3, y3 .... 
+    .attr('fill', 'none')
+    .attr('stroke', 'green')
+    ;
+
+
+
+    </script>
+</body>
