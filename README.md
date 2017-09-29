@@ -5,3 +5,6 @@ d3 javascript
 2. index.html will present this visualization on your browser
 3. shapes are coded in shapes.js
 4. style is coded in style.css
+
+
+# EQ directory is Earthquake Viz using D3
